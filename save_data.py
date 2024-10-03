@@ -1,5 +1,4 @@
 import os
-
 import pandas as pd
 
 
@@ -15,37 +14,44 @@ def save(file_name: str, products: list):
         # Constructing the product URL
         formatted_url_name = goods_url_name.replace(" ", "-")
         product_url = BASE_URL_TEMPLATE.format(formatted_url_name, goods_id)
-        try:
-            flattened_data = {
-                "goods_id": goods_id,
-                "goods_sn": productData["goods_sn"],  # SKU
-                "mall_code": productData["mall_code"],
-                "score": productData["score"],
-                "goods_name": productData["goods_name"],
-                "retail_price_amount": productData["retailPrice"]["amount"],
-                "retail_price_usd": productData["retailPrice"]["usdAmount"],
-                "sale_price_amount": productData["salePrice"]["amount"],
-                "sale_price_usd": productData["salePrice"]["usdAmount"],
-                "store_code": productData["storeInfo"]["storeCode"],
-                "store_title": productData["storeInfo"]["title"],
-                "store_logo": productData["storeInfo"]["logo"],
-                "product_image": product_image,  # Adding product image URL
-                "product_url": product_url  # Adding product URL
-            }
-            flattened_data_list.append(flattened_data)
-        except Exception as e:
-            print(f"An error occurred: {e}")
+
+        flattened_data = {
+            "goods_id": goods_id,
+            "goods_sn": productData["goods_sn"],  # SKU
+            "mall_code": productData["mall_code"],
+            "score": productData["score"],
+            "goods_name": productData["goods_name"],
+            "retail_price_amount": productData["retailPrice"]["amount"],
+            "retail_price_usd": productData["retailPrice"]["usdAmount"],
+            "sale_price_amount": productData["salePrice"]["amount"],
+            "sale_price_usd": productData["salePrice"]["usdAmount"],
+            "store_code": productData["storeInfo"]["storeCode"],
+            "store_title": productData["storeInfo"]["title"],
+            "store_logo": productData["storeInfo"]["logo"],
+            "product_image": product_image,  # Adding product image URL
+            "product_url": product_url  # Adding product URL
+        }
+        flattened_data_list.append(flattened_data)
 
     # Create a DataFrame from the collected data
-    df = pd.DataFrame(flattened_data_list)
+    new_data_df = pd.DataFrame(flattened_data_list)
 
-    # Save to Excel
-    try:
-        os.mkdir('ScrapedData')
-        excel_file = f'ScrapedData/{file_name}.xlsx'
-    except Exception as e:
-        excel_file = f'ScrapedData/{file_name}.xlsx'
+    # Create directory if it doesn't exist
+    os.makedirs('ScrapedData', exist_ok=True)
 
-    df.to_excel(excel_file, index=False)
+    # Path to the Excel file
+    excel_file = f'ScrapedData/{file_name}.xlsx'
 
-    print(f"Data saved to {excel_file}")
+    # Append to the existing file or create a new one
+    if os.path.exists(excel_file):
+        # Load existing data
+        existing_data_df = pd.read_excel(excel_file)
+
+        # Append the new data
+        combined_df = pd.concat([existing_data_df, new_data_df], ignore_index=True)
+        combined_df.to_excel(excel_file, index=False)
+        print(f"Data appended to {excel_file}")
+    else:
+        # Save new data
+        new_data_df.to_excel(excel_file, index=False)
+        print(f"Data saved to {excel_file}")
